@@ -4,8 +4,12 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,6 +17,7 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import Data.DatabaseHandler;
@@ -23,6 +28,7 @@ public class LondonPlacesActivity extends AppCompatActivity {
     private boolean isVisited = false;
     private boolean isAddedToDB = false;
     private int placeId = -1;
+    private String placeName = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +50,8 @@ public class LondonPlacesActivity extends AppCompatActivity {
 
         final LinearLayout markVisitedButton = findViewById(R.id.markVisitedButton);
         final ImageView visitedCircleImage = findViewById(R.id.visitedCircle);
+
+        final Spinner spinner = findViewById(R.id.place_spinner);
 
         DatabaseHandler databaseHandler = new DatabaseHandler(this);
 
@@ -83,12 +91,35 @@ public class LondonPlacesActivity extends AppCompatActivity {
             }
         });
 
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String item = parent.getItemAtPosition(position).toString();
+                //Toast.makeText(LondonPlacesActivity.this, "Selected item: " + item, Toast.LENGTH_SHORT).show();
+                placeName = item;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add("Westminster Abbey");
+        arrayList.add("London Eye");
+        arrayList.add("Big Ben");
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item, arrayList);
+        adapter.setDropDownViewResource(android.R.layout.select_dialog_singlechoice);
+        spinner.setAdapter(adapter);
+
         markVisitedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
                 List<VisitedPlaces> placesList = databaseHandler.getAllPlaces();
-                Log.d("id", "placeId: " + placeId);
+                //Log.d("id", "placeId: " + placeId);
 
                 for (VisitedPlaces place : placesList)
                 {
@@ -102,17 +133,17 @@ public class LondonPlacesActivity extends AppCompatActivity {
 
                     if (!isAddedToDB)
                     {
-                        VisitedPlaces placeToAdd = new VisitedPlaces("London", "WestminsterAbbey", 1);
-                        Log.d("info: ", "!isVisited + !isAddedToDB");
+                        VisitedPlaces placeToAdd = new VisitedPlaces("London", placeName, 1);
+                        //Log.d("info: ", "!isVisited + !isAddedToDB");
                         placeId = placeToAdd.getId(); // sets to 0 for some reason
-                        Log.d("id", "placeID: " + placeId);
+                        //Log.d("id", "placeID: " + placeId);
                         databaseHandler.addPlace(placeToAdd);
                         isAddedToDB = true;
                     }
                     else
                     {
-                        Log.d("info: ", "!isVisited + isAddedToDB");
-                        VisitedPlaces place = databaseHandler.getPlaceByName("WestminsterAbbey");
+                        //Log.d("info: ", "!isVisited + isAddedToDB");
+                        VisitedPlaces place = databaseHandler.getPlaceByName(placeName);
                         place.setVisited(1);
                         databaseHandler.updatePlace(place);
                     }
@@ -121,9 +152,9 @@ public class LondonPlacesActivity extends AppCompatActivity {
                 }
                 else
                 {
-                    Log.d("info: ", "isVisited");
+                    //Log.d("info: ", "isVisited");
                     visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
-                    VisitedPlaces place = databaseHandler.getPlaceByName("WestminsterAbbey");
+                    VisitedPlaces place = databaseHandler.getPlaceByName(placeName);
                     place.setVisited(0);
 
                     Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
