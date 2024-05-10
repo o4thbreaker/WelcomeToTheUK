@@ -106,7 +106,7 @@ public class LondonHotelsActivity extends AppCompatActivity {
                     }
                     else
                     {
-                        VisitedPlaces place = databaseHandler.getPlace(placeId);
+                        VisitedPlaces place = databaseHandler.getPlaceById(placeId);
                         place.setVisited(1);
                         databaseHandler.updatePlace(place);
                     }
@@ -117,7 +117,7 @@ public class LondonHotelsActivity extends AppCompatActivity {
                 {
                     visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
 
-                    VisitedPlaces place = databaseHandler.getPlace(placeId);
+                    VisitedPlaces place = databaseHandler.getPlaceById(placeId);
                     place.setVisited(0);
                     databaseHandler.updatePlace(place);
 

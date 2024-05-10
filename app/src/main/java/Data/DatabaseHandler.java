@@ -6,8 +6,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import androidx.annotation.Nullable;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +47,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    public VisitedPlaces getPlace(int id) {
+    public VisitedPlaces getPlaceById(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query(Util.TABLE_NAME, new String[] {Util.KEY_ID, Util.KEY_CITY, Util.KEY_NAME, Util.KEY_ISVISITED},
                 Util.KEY_ID + "=?", new String[]{String.valueOf(id)}, null, null, null, null);
@@ -62,6 +60,21 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 cursor.getString(1), cursor.getString(2), Integer.parseInt(cursor.getString(3)));
         return places;
     }
+
+    public VisitedPlaces getPlaceByName(String name) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query(Util.TABLE_NAME, new String[] {Util.KEY_ID, Util.KEY_CITY, Util.KEY_NAME, Util.KEY_ISVISITED},
+                Util.KEY_NAME + "=?", new String[] {name}, null, null, null, null);
+
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
+
+        VisitedPlaces places = new VisitedPlaces(Integer.parseInt(cursor.getString(0)),
+                cursor.getString(1), cursor.getString(2), Integer.parseInt(cursor.getString(3)));
+        return places;
+    }
+
 
     public List<VisitedPlaces> getAllPlaces()
     {

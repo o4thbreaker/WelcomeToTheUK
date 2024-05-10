@@ -112,7 +112,7 @@ public class LondonPlacesActivity extends AppCompatActivity {
                     else
                     {
                         Log.d("info: ", "!isVisited + isAddedToDB");
-                        VisitedPlaces place = databaseHandler.getPlace(placeId);
+                        VisitedPlaces place = databaseHandler.getPlaceByName("WestminsterAbbey");
                         place.setVisited(1);
                         databaseHandler.updatePlace(place);
                     }
@@ -123,13 +123,12 @@ public class LondonPlacesActivity extends AppCompatActivity {
                 {
                     Log.d("info: ", "isVisited");
                     visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
+                    VisitedPlaces place = databaseHandler.getPlaceByName("WestminsterAbbey");
+                    place.setVisited(0);
 
-                    //VisitedPlaces place = databaseHandler.getPlace(placeId);
-                    //place.setVisited(0);
-
-                    //Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
-                    //        + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());
-                    //databaseHandler.updatePlace(place);
+                    Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
+                            + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());
+                    databaseHandler.updatePlace(place);
 
                     isVisited = false;
                 }
