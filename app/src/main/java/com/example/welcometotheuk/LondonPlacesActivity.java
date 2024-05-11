@@ -1,6 +1,7 @@
 package com.example.welcometotheuk;
 
 import android.content.Intent;
+import android.database.CursorIndexOutOfBoundsException;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -28,7 +29,10 @@ public class LondonPlacesActivity extends AppCompatActivity {
     private boolean isVisited = false;
     private boolean isAddedToDB = false;
     private int placeId = -1;
+
+    private String placeIdName = "";
     private String placeName = "";
+    private VisitedPlaces place = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +58,23 @@ public class LondonPlacesActivity extends AppCompatActivity {
         final Spinner spinner = findViewById(R.id.place_spinner);
 
         DatabaseHandler databaseHandler = new DatabaseHandler(this);
+
+        placesButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                databaseHandler.deleteAll();
+                List<VisitedPlaces> placesList = databaseHandler.getAllPlaces();
+
+                for (VisitedPlaces place : placesList)
+                {
+                    Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
+                            + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());
+                }
+
+                Log.d("info: ", "done");
+            }
+        });
+
 
         hotelsButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -94,9 +115,32 @@ public class LondonPlacesActivity extends AppCompatActivity {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String item = parent.getItemAtPosition(position).toString();
+                placeName = parent.getItemAtPosition(position).toString();
                 //Toast.makeText(LondonPlacesActivity.this, "Selected item: " + item, Toast.LENGTH_SHORT).show();
-                placeName = item;
+
+                try {
+                    place = databaseHandler.getPlaceByName(placeName);
+                } catch (CursorIndexOutOfBoundsException e) {
+                    visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
+                    place = null;
+                }
+
+
+                if (place != null)
+                {
+                    if (place.getIsVisited() == 1)
+                    {
+                        visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
+                        isVisited = true;
+                    }
+                    else
+                    {
+                        visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
+                        isVisited = false;
+                    }
+                }
+                /*else
+                    isAddedToDB = false;*/
             }
 
             @Override
@@ -119,7 +163,7 @@ public class LondonPlacesActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 List<VisitedPlaces> placesList = databaseHandler.getAllPlaces();
-                //Log.d("id", "placeId: " + placeId);
+                Log.d("id", "placeName: " + placeName);
 
                 for (VisitedPlaces place : placesList)
                 {
@@ -127,42 +171,56 @@ public class LondonPlacesActivity extends AppCompatActivity {
                             + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());
                 }
 
-                if (!isVisited)
+                if (place == null)
                 {
+                    VisitedPlaces placeToAdd = new VisitedPlaces("London", placeName, 1);
+                    //placeIdName = placeToAdd.getName();
+                    databaseHandler.addPlace(placeToAdd);
+                    place = placeToAdd;
+
                     visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
-
-                    if (!isAddedToDB)
-                    {
-                        VisitedPlaces placeToAdd = new VisitedPlaces("London", placeName, 1);
-                        //Log.d("info: ", "!isVisited + !isAddedToDB");
-                        placeId = placeToAdd.getId(); // sets to 0 for some reason
-                        //Log.d("id", "placeID: " + placeId);
-                        databaseHandler.addPlace(placeToAdd);
-                        isAddedToDB = true;
-                    }
-                    else
-                    {
-                        //Log.d("info: ", "!isVisited + isAddedToDB");
-                        VisitedPlaces place = databaseHandler.getPlaceByName(placeName);
-                        place.setVisited(1);
-                        databaseHandler.updatePlace(place);
-                    }
-
-                    isVisited = true;
+                    place.setVisited(1);
+                    //isAddedToDB = true;
                 }
                 else
                 {
-                    //Log.d("info: ", "isVisited");
+                    //VisitedPlaces place = databaseHandler.getPlaceByName(placeName);
+                    if (place.getIsVisited() == 1)
+                    {
+                        visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
+                        place.setVisited(0);
+                    }
+                    else
+                    {
+                        visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
+                        place.setVisited(1);
+                    }
+
+                    databaseHandler.updatePlace(place);
+                }
+            }
+
+            void SetVisited(VisitedPlaces place)
+            {
+                place.setVisited(1);
+                visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
+
+                /*if (place.getIsVisited() == 1)
+                {
+                    visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
+                }
+                else
+                {
+                    Log.d("info: ", "isVisited");
                     visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
                     VisitedPlaces place = databaseHandler.getPlaceByName(placeName);
                     place.setVisited(0);
 
-                    Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
-                            + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());
-                    databaseHandler.updatePlace(place);
+                   *//* Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
+                            + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());*//*
 
-                    isVisited = false;
-                }
+                    databaseHandler.updatePlace(place);
+                }*/
             }
         });
 

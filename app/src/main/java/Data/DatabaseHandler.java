@@ -111,4 +111,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
        return db.update(Util.TABLE_NAME, contentValues, Util.KEY_ID + "=?", new String[] {String.valueOf(places.getId())});
     }
 
+    public void deleteAll()
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("delete from " + Util.TABLE_NAME);
+    }
+
 }
