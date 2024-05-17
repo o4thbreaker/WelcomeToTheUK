@@ -9,4 +9,6 @@ public class Util {
     public static final String KEY_CITY = "city";
     public static final String KEY_NAME = "name";
     public static final String KEY_ISVISITED = "isVisited";
+    public static final String KEY_LONGITUDE = "longitude";
+    public static final String KEY_LATITUDE = "latitude";
 }

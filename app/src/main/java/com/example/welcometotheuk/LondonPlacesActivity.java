@@ -10,13 +10,22 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+
+import org.osmdroid.api.IMapController;
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.util.GeoPoint;
+import org.osmdroid.views.MapView;
+import org.osmdroid.config.Configuration;
+import org.osmdroid.views.overlay.Marker;
+import org.osmdroid.views.overlay.gestures.RotationGestureOverlay;
+import org.osmdroid.wms.BuildConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,13 +35,11 @@ import Model.VisitedPlaces;
 
 public class LondonPlacesActivity extends AppCompatActivity {
 
-    private boolean isVisited = false;
-    private boolean isAddedToDB = false;
-    private int placeId = -1;
-
-    private String placeIdName = "";
+    private DatabaseHandler databaseHandler = null;
     private String placeName = "";
     private VisitedPlaces place = null;
+    private MapView map = null;
+    private RotationGestureOverlay mRotationGestureOverlay = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,33 +52,40 @@ public class LondonPlacesActivity extends AppCompatActivity {
             return insets;
         });
 
+        // ACTIVITES BUTTONS
         final ImageView placesButton = findViewById(R.id.PlacesButton);
         final ImageView hotelsButton = findViewById(R.id.HotelsButton);
         final ImageView tripsButton = findViewById(R.id.TripsButton);
         final ImageView flightsButton = findViewById(R.id.FlightsButton);
 
+        // BACK BUTTON
         final ImageView backArrowButton = findViewById(R.id.backArrow);
 
+        // VISITED BUTTONS
         final LinearLayout markVisitedButton = findViewById(R.id.markVisitedButton);
         final ImageView visitedCircleImage = findViewById(R.id.visitedCircle);
 
+        // HEADLINER BUTTON
         final Spinner spinner = findViewById(R.id.place_spinner);
 
-        DatabaseHandler databaseHandler = new DatabaseHandler(this);
+        // DATABASE
+        databaseHandler = new DatabaseHandler(this);
+
+        // TODO: из-за моих кривых рук сначала ДОЛГОТА потом ШИРОТА (лень исправлять)
+        AddPlaceToDB(databaseHandler, "Westminster Abbey",-0.1288624, 51.4993832);
+        AddPlaceToDB(databaseHandler, "London Eye", -0.1220941, 51.5031897);
+        AddPlaceToDB(databaseHandler, "Big Ben", -0.1272003, 51.5007325);
+
+        // MAP
+        ConfigureMap();
 
         placesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 databaseHandler.deleteAll();
-                List<VisitedPlaces> placesList = databaseHandler.getAllPlaces();
+                Log.d("info: ", "database cleared");
 
-                for (VisitedPlaces place : placesList)
-                {
-                    Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
-                            + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());
-                }
-
-                Log.d("info: ", "done");
+                LogDatabaseInfo();
             }
         });
 
@@ -116,7 +130,6 @@ public class LondonPlacesActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 placeName = parent.getItemAtPosition(position).toString();
-                //Toast.makeText(LondonPlacesActivity.this, "Selected item: " + item, Toast.LENGTH_SHORT).show();
 
                 try {
                     place = databaseHandler.getPlaceByName(placeName);
@@ -125,22 +138,27 @@ public class LondonPlacesActivity extends AppCompatActivity {
                     place = null;
                 }
 
-
                 if (place != null)
                 {
                     if (place.getIsVisited() == 1)
                     {
                         visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
-                        isVisited = true;
+
+                        IMapController mapController = map.getController();
+                        mapController.setZoom(18.0);
+                        GeoPoint point = new GeoPoint(place.getLatitude(), place.getLongitude());
+                        mapController.setCenter(point);
                     }
                     else
                     {
                         visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
-                        isVisited = false;
+
+                        IMapController mapController = map.getController();
+                        mapController.setZoom(18.0);
+                        GeoPoint point = new GeoPoint(place.getLatitude(), place.getLongitude());
+                        mapController.setCenter(point);
                     }
                 }
-                /*else
-                    isAddedToDB = false;*/
             }
 
             @Override
@@ -149,42 +167,14 @@ public class LondonPlacesActivity extends AppCompatActivity {
             }
         });
 
-        ArrayList<String> arrayList = new ArrayList<>();
-        arrayList.add("Westminster Abbey");
-        arrayList.add("London Eye");
-        arrayList.add("Big Ben");
-
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item, arrayList);
-        adapter.setDropDownViewResource(android.R.layout.select_dialog_singlechoice);
-        spinner.setAdapter(adapter);
+        HandleAdapter(spinner);
 
         markVisitedButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-                List<VisitedPlaces> placesList = databaseHandler.getAllPlaces();
-                Log.d("id", "placeName: " + placeName);
-
-                for (VisitedPlaces place : placesList)
+                if (place != null)
                 {
-                    Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
-                            + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());
-                }
-
-                if (place == null)
-                {
-                    VisitedPlaces placeToAdd = new VisitedPlaces("London", placeName, 1);
-                    //placeIdName = placeToAdd.getName();
-                    databaseHandler.addPlace(placeToAdd);
-                    place = placeToAdd;
-
-                    visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
-                    place.setVisited(1);
-                    //isAddedToDB = true;
-                }
-                else
-                {
-                    //VisitedPlaces place = databaseHandler.getPlaceByName(placeName);
                     if (place.getIsVisited() == 1)
                     {
                         visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
@@ -198,31 +188,76 @@ public class LondonPlacesActivity extends AppCompatActivity {
 
                     databaseHandler.updatePlace(place);
                 }
-            }
 
-            void SetVisited(VisitedPlaces place)
-            {
-                place.setVisited(1);
-                visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
-
-                /*if (place.getIsVisited() == 1)
-                {
-                    visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
-                }
-                else
-                {
-                    Log.d("info: ", "isVisited");
-                    visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
-                    VisitedPlaces place = databaseHandler.getPlaceByName(placeName);
-                    place.setVisited(0);
-
-                   *//* Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
-                            + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited());*//*
-
-                    databaseHandler.updatePlace(place);
-                }*/
+                LogDatabaseInfo();
             }
         });
+    }
 
+    private void AddPlaceToDB(DatabaseHandler databaseHandler, String placeName, Double longitude, Double latitude)
+    {
+        VisitedPlaces placeToAdd = new VisitedPlaces("London", placeName, 0, longitude, latitude);
+
+        try {
+            databaseHandler.getPlaceByName(placeName);
+        } catch (CursorIndexOutOfBoundsException e) {
+            databaseHandler.addPlace(placeToAdd);
+        }
+
+    }
+
+    private void LogDatabaseInfo()
+    {
+        List<VisitedPlaces> placesList = databaseHandler.getAllPlaces();
+
+        for (VisitedPlaces place : placesList)
+        {
+            Log.d("VisitedPlaces info: ", " ID: " + place.getId() + " , City: " + place.getCity()
+                    + " , Name: " + place.getName() + " , isVisited: " + place.getIsVisited() +
+                    " , Longitude: " + place.getLongitude() + " , Latitude: " + place.getLatitude());
+        }
+    }
+
+    private void HandleAdapter(Spinner spinner)
+    {
+        ArrayList<String> arrayList = new ArrayList<>();
+        arrayList.add("Westminster Abbey");
+        arrayList.add("London Eye");
+        arrayList.add("Big Ben");
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, R.layout.list_item, arrayList);
+        adapter.setDropDownViewResource(android.R.layout.select_dialog_singlechoice);
+        spinner.setAdapter(adapter);
+    }
+
+    private void ConfigureMap()
+    {
+        map = findViewById(R.id.map);
+        map.setTileSource(TileSourceFactory.MAPNIK);
+
+        Configuration.getInstance().setUserAgentValue(BuildConfig.LIBRARY_PACKAGE_NAME);
+        Configuration.getInstance().setOsmdroidBasePath(getFilesDir());
+
+        IMapController mapController = map.getController();
+        mapController.setZoom(18.0);
+        GeoPoint startPoint = new GeoPoint(51.4993832, -0.1288624);
+        mapController.setCenter(startPoint);
+
+        //setMarker(startPoint);
+
+        mRotationGestureOverlay = new RotationGestureOverlay(map);
+        mRotationGestureOverlay.setEnabled(true);
+        map.setMultiTouchControls(true);
+        map.getOverlays().add(this.mRotationGestureOverlay);
+    }
+
+    private void setMarker(GeoPoint geoPoint)
+    {
+        Marker startMarker = new Marker(map);
+        startMarker.setPosition(geoPoint);
+        //startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+        startMarker.setIcon(getResources().getDrawable(R.drawable.place_icon, null));
+        startMarker.setTitle("Start point");
+        map.getOverlays().add(startMarker);
     }
 }

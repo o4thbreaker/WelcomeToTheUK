@@ -24,7 +24,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 + Util.KEY_ID + " INTEGER PRIMARY KEY, "
                 + Util.KEY_CITY + " TEXT, "
                 + Util.KEY_NAME + " TEXT, "
-                + Util.KEY_ISVISITED + " INTEGER" + " )";
+                + Util.KEY_ISVISITED + " INTEGER, "
+                + Util.KEY_LONGITUDE + " REAL, "
+                + Util.KEY_LATITUDE + " REAL"
+                + " )";
 
         db.execSQL(CREATE_VISITEDPLACES_TABLE);
     }
@@ -42,6 +45,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         contentValues.put(Util.KEY_CITY, places.getCity());
         contentValues.put(Util.KEY_NAME, places.getName());
         contentValues.put(Util.KEY_ISVISITED, places.getIsVisited());
+        contentValues.put(Util.KEY_LONGITUDE, places.getLongitude());
+        contentValues.put(Util.KEY_LATITUDE, places.getLatitude());
 
         db.insert(Util.TABLE_NAME, null, contentValues);
         db.close();
@@ -49,29 +54,39 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public VisitedPlaces getPlaceById(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(Util.TABLE_NAME, new String[] {Util.KEY_ID, Util.KEY_CITY, Util.KEY_NAME, Util.KEY_ISVISITED},
+        Cursor cursor = db.query(Util.TABLE_NAME, new String[] {Util.KEY_ID, Util.KEY_CITY, Util.KEY_NAME, Util.KEY_ISVISITED, Util.KEY_LONGITUDE, Util.KEY_LATITUDE},
                 Util.KEY_ID + "=?", new String[]{String.valueOf(id)}, null, null, null, null);
 
         if (cursor != null) {
             cursor.moveToFirst();
         }
 
-        VisitedPlaces places = new VisitedPlaces(Integer.parseInt(cursor.getString(0)),
-                cursor.getString(1), cursor.getString(2), Integer.parseInt(cursor.getString(3)));
+        VisitedPlaces places = new VisitedPlaces(
+                Integer.parseInt(cursor.getString(0)),
+                cursor.getString(1),
+                cursor.getString(2),
+                Integer.parseInt(cursor.getString(3)),
+                Double.parseDouble(cursor.getString(4)),
+                Double.parseDouble(cursor.getString(5)));
         return places;
     }
 
     public VisitedPlaces getPlaceByName(String name) {
         SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.query(Util.TABLE_NAME, new String[] {Util.KEY_ID, Util.KEY_CITY, Util.KEY_NAME, Util.KEY_ISVISITED},
+        Cursor cursor = db.query(Util.TABLE_NAME, new String[] {Util.KEY_ID, Util.KEY_CITY, Util.KEY_NAME, Util.KEY_ISVISITED, Util.KEY_LONGITUDE, Util.KEY_LATITUDE},
                 Util.KEY_NAME + "=?", new String[] {name}, null, null, null, null);
 
         if (cursor != null) {
             cursor.moveToFirst();
         }
 
-        VisitedPlaces places = new VisitedPlaces(Integer.parseInt(cursor.getString(0)),
-                cursor.getString(1), cursor.getString(2), Integer.parseInt(cursor.getString(3)));
+        VisitedPlaces places = new VisitedPlaces(
+                Integer.parseInt(cursor.getString(0)),
+                cursor.getString(1),
+                cursor.getString(2),
+                Integer.parseInt(cursor.getString(3)),
+                Double.parseDouble(cursor.getString(4)),
+                Double.parseDouble(cursor.getString(5)));
         return places;
     }
 
@@ -91,6 +106,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 places.setCity(cursor.getString(1));
                 places.setName(cursor.getString(2));
                 places.setVisited(Integer.parseInt(cursor.getString(3)));
+                places.setLongitude(Double.parseDouble(cursor.getString(4)));
+                places.setLatitude(Double.parseDouble(cursor.getString(5)));
 
                 placesList.add(places);
             } while (cursor.moveToNext());
@@ -107,6 +124,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         contentValues.put(Util.KEY_CITY, places.getCity());
         contentValues.put(Util.KEY_NAME, places.getName());
         contentValues.put(Util.KEY_ISVISITED, places.getIsVisited());
+        contentValues.put(Util.KEY_LONGITUDE, places.getLongitude());
+        contentValues.put(Util.KEY_LATITUDE, places.getLatitude());
 
        return db.update(Util.TABLE_NAME, contentValues, Util.KEY_ID + "=?", new String[] {String.valueOf(places.getId())});
     }

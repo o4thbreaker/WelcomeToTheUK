@@ -99,7 +99,7 @@ public class LondonHotelsActivity extends AppCompatActivity {
 
                     if (!isAddedToDB)
                     {
-                        VisitedPlaces placeToAdd = new VisitedPlaces("London", "SmartCamden", 1);
+                        VisitedPlaces placeToAdd = new VisitedPlaces("London", "SmartCamden", 1, -0.1420144, 51.5368398);
                         placeId = placeToAdd.getId();
                         databaseHandler.addPlace(placeToAdd);
                         isAddedToDB = true;
