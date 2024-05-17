@@ -39,8 +39,6 @@ dependencies {
     androidTestImplementation(libs.espresso.core)
 
     implementation("org.osmdroid:osmdroid-android:6.1.18")
-
-    implementation("org.osmdroid:osmdroid-android:6.1.18")
     implementation("org.osmdroid:osmdroid-wms:6.1.18")
     implementation("org.osmdroid:osmdroid-mapsforge:6.1.18")
     implementation("org.osmdroid:osmdroid-geopackage:6.1.18") {
@@ -48,4 +46,10 @@ dependencies {
         exclude(module = "ormlite-core")
         exclude(group = "com.j256.ormlite")
     }
+
+    implementation("com.squareup.retrofit2:retrofit:2.8.1")
+    implementation("com.squareup.retrofit2:converter-gson:2.1.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:3.4.1")
+    implementation("com.google.code.gson:gson:2.6.2")
+
 }
