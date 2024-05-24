@@ -39,6 +39,7 @@ public class LondonPlacesActivity extends AppCompatActivity {
     private String placeName = "";
     private VisitedPlaces place = null;
     private MapView map = null;
+    private Marker currentMarker = null;
     private RotationGestureOverlay mRotationGestureOverlay = null;
 
     @Override
@@ -145,8 +146,10 @@ public class LondonPlacesActivity extends AppCompatActivity {
                         visitedCircleImage.setImageResource(R.drawable.visited_place_icon);
 
                         IMapController mapController = map.getController();
-                        mapController.setZoom(18.0);
+                        mapController.setZoom(20.0);
                         GeoPoint point = new GeoPoint(place.getLatitude(), place.getLongitude());
+                        deleteCurrentMarker();
+                        setMarker(point);
                         mapController.setCenter(point);
                     }
                     else
@@ -154,8 +157,10 @@ public class LondonPlacesActivity extends AppCompatActivity {
                         visitedCircleImage.setImageResource(R.drawable.unvisited_place_icon);
 
                         IMapController mapController = map.getController();
-                        mapController.setZoom(18.0);
+                        mapController.setZoom(20.0);
                         GeoPoint point = new GeoPoint(place.getLatitude(), place.getLongitude());
+                        deleteCurrentMarker();
+                        setMarker(point);
                         mapController.setCenter(point);
                     }
                 }
@@ -239,11 +244,11 @@ public class LondonPlacesActivity extends AppCompatActivity {
         Configuration.getInstance().setOsmdroidBasePath(getFilesDir());
 
         IMapController mapController = map.getController();
-        mapController.setZoom(18.0);
+        mapController.setZoom(20.0);
         GeoPoint startPoint = new GeoPoint(51.4993832, -0.1288624);
         mapController.setCenter(startPoint);
 
-        //setMarker(startPoint);
+        setMarker(startPoint);
 
         mRotationGestureOverlay = new RotationGestureOverlay(map);
         mRotationGestureOverlay.setEnabled(true);
@@ -253,11 +258,20 @@ public class LondonPlacesActivity extends AppCompatActivity {
 
     private void setMarker(GeoPoint geoPoint)
     {
-        Marker startMarker = new Marker(map);
-        startMarker.setPosition(geoPoint);
-        //startMarker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
-        startMarker.setIcon(getResources().getDrawable(R.drawable.place_icon, null));
-        startMarker.setTitle("Start point");
-        map.getOverlays().add(startMarker);
+        Marker marker = new Marker(map);
+        marker.setPosition(geoPoint);
+        //marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+        marker.setIcon(getResources().getDrawable(R.drawable.map_place_icon, null));
+        marker.setTitle("Start point");
+        map.getOverlays().add(marker);
+        currentMarker = marker;
+    }
+
+    private void deleteCurrentMarker()
+    {
+        if (currentMarker != null)
+        {
+            map.getOverlays().remove(currentMarker);
+        }
     }
 }
